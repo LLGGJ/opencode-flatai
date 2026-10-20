@@ -72,64 +72,69 @@ nele. O caminho proposto é usar **Debian via proot-distro**, em aparelho com ar
 `aarch64`/`arm64` ou `x86_64`. Este procedimento ainda precisa de validação em um
 aparelho real; a verificação deste repositório foi feita em Linux x64.
 
-No Termux:
+### Instalar pelo Termux
+
+Se você já clonou o repositório, **atualize esse clone**. Não repita `git clone`
+na mesma pasta. No Termux, execute:
 
 ```bash
-pkg update
-pkg install proot-distro
-proot-distro install debian
+cd ~/opencode-flatai &&
+git pull --ff-only origin main &&
+bash script/install-termux.sh
+```
+
+O instalador prepara o Debian, mantém um clone separado dentro dele, instala o Bun
+na versão do projeto e depois instala as dependências e executa `npm link` em
+`script/local-cli`. Se uma etapa falhar, ele para antes de anunciar sucesso.
+A pasta `node_modules` da instalação interrompida no Android não é reutilizada.
+
+Depois da instalação, abra a CLI **a partir do Termux** com:
+
+```bash
+proot-distro login debian -- flatai --standalone
+```
+
+O modo `--standalone` mantém o servidor junto da CLI nessa sessão do proot.
+Para usar o comando `flatai` dentro do Debian:
+
+```bash
 proot-distro login debian
+flatai --standalone
 ```
 
-Se o Debian já estiver instalado, basta executar `proot-distro login debian`.
-
-**Não execute `bun install` no Termux antes de entrar no Debian e instalar o Bun.**
-A mensagem `No command bun found` indica que esse terminal ainda não encontra o
-Bun; repetir `bun install` não instala o runtime.
-
-Dentro do Debian (inclusive para os próximos comandos):
-
-```bash
-apt update
-apt install -y git curl ca-certificates unzip nodejs npm build-essential python3
-npm install -g bun@1.4.2
-bun --version
-
-git clone https://github.com/LLGGJ/opencode-flatai.git
-cd opencode-flatai
-bun install --frozen-lockfile
-cd script/local-cli
-npm link
-cd ../..
-flatai --version
-flatai --help
-flatai
-```
-
-Nas próximas sessões, entre novamente com `proot-distro login debian` antes de usar
-`flatai`. Clone na pasta pessoal do Debian; o armazenamento compartilhado do
-Android (`/sdcard`) não oferece os links simbólicos e permissões exigidos.
+Clone na pasta pessoal do Debian; o armazenamento compartilhado do Android
+(`/sdcard`) não oferece os links simbólicos e permissões exigidos.
 
 ### Atualizar uma instalação existente
 
 Dentro do Debian, entre na pasta do clone e execute:
 
 ```bash
-git pull origin main
-bun install --frozen-lockfile
-cd script/local-cli
-npm link
-cd ../..
-flatai
+git pull --ff-only origin main &&
+bun install --frozen-lockfile &&
+(cd script/local-cli && npm link) &&
+flatai --standalone
 ```
 
 ### Erros comuns
 
+- **`destination path ... already exists`:** o clone já existe. Entre nele com
+  `cd ~/opencode-flatai` e atualize com `git pull --ff-only origin main`.
+- **`Bad system call (core dumped)`:** o Bun foi encerrado por uma chamada de
+  sistema incompatível ou bloqueada no Android. Execute o instalador acima para
+  tentar a instalação dentro do Debian. O proot usa o mesmo kernel do Android;
+  se o erro persistir dentro dele, ainda há uma incompatibilidade do runtime
+  com o aparelho e precisamos do erro dessa etapa para investigar.
+- **`cd: script/local-cli: No such file or directory`:** seu clone está
+  desatualizado. Atualize a `main` antes de tentar `npm link`.
+- **`husky: not found` durante `npm link`:** o comando foi executado na raiz
+  sem as dependências instaladas. Pare após a primeira falha e use o instalador;
+  `npm link` deve executar somente dentro de `script/local-cli`.
 - **`EUNSUPPORTEDPROTOCOL` / `Unsupported URL Type "catalog:"` ou `"workspace:"`:**
   instale com `bun install --frozen-lockfile` na raiz e execute `npm link` somente
   em `script/local-cli`.
-- **`bun: command not found`:** instale a versão indicada acima dentro do Debian e
-  confira `bun --version` na mesma sessão.
+- **`bun: command not found`:** execute o instalador acima; ele instala o Bun
+  dentro do Debian, onde a CLI será executada.
 - **`Exec format error` / binário existe, mas aparece `No such file or directory`:**
   confira se você está dentro do Debian, e se `uname -m` indica `aarch64` ou `x86_64`.
 - **`Cannot find module 'react/jsx-dev-runtime'` / `Standalone server exited before reporting readiness`:**
