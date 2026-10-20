@@ -19,16 +19,9 @@ try {
   process.exit(1)
 }
 
-const result = childProcess.spawnSync(
-  "bun",
-  [
-    "--preload",
-    path.join(root, "script/local-cli/preload.ts"),
-    path.join(cli, "src/index.ts"),
-    ...process.argv.slice(2),
-  ],
-  { stdio: "inherit" },
-)
+const result = childProcess.spawnSync("bun", [path.join(root, "script/local-cli/main.ts"), ...process.argv.slice(2)], {
+  stdio: "inherit",
+})
 if (result.error) {
   console.error(
     result.error.code === "ENOENT" ? "Bun não encontrado. Instale o Bun 1.4.2 e confira o PATH." : result.error.message,

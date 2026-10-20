@@ -110,6 +110,19 @@ Nas próximas sessões, entre novamente com `proot-distro login debian` antes de
 `flatai`. Clone na pasta pessoal do Debian; o armazenamento compartilhado do
 Android (`/sdcard`) não oferece os links simbólicos e permissões exigidos.
 
+### Atualizar uma instalação existente
+
+Dentro do Debian, entre na pasta do clone e execute:
+
+```bash
+git pull origin main
+bun install --frozen-lockfile
+cd script/local-cli
+npm link
+cd ../..
+flatai
+```
+
 ### Erros comuns
 
 - **`EUNSUPPORTEDPROTOCOL` / `Unsupported URL Type "catalog:"` ou `"workspace:"`:**
@@ -119,9 +132,13 @@ Android (`/sdcard`) não oferece os links simbólicos e permissões exigidos.
   confira `bun --version` na mesma sessão.
 - **`Exec format error` / binário existe, mas aparece `No such file or directory`:**
   confira se você está dentro do Debian, e se `uname -m` indica `aarch64` ou `x86_64`.
+- **`Cannot find module 'react/jsx-dev-runtime'` / `Standalone server exited before reporting readiness`:**
+  atualize o clone conforme os comandos acima. O lançador `flatai` prepara o OpenTUI
+  tanto na interface quanto nos processos do servidor.
 - **`flatai: command not found`:** execute `npm link` dentro do Debian e confira
   se `$(npm prefix -g)/bin` está no `PATH`.
 
+Para obter detalhes da inicialização, execute `flatai --print-logs`.
 Se persistir, envie o comando executado, o erro completo e as saídas de
 `uname -m`, `node --version`, `npm --version` e `bun --version`.
 

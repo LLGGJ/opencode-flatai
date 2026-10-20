@@ -6,6 +6,7 @@ import { Global } from "@opencode/util/global"
 import { Updater } from "../services/updater"
 import { Config } from "../config"
 import { Npm } from "@opencode/util/npm"
+import { ensurePluginRuntime } from "@opencode/plugin/runtime"
 
 export type Input<Value> =
   Value extends Spec.Node<infer _Name, infer Command, infer _Commands>
@@ -67,12 +68,14 @@ export function handlers<const Root extends Spec.Any>(root: Root, handlers: Hand
   function add(node: Spec.Any, value: RuntimeHandlers) {
     if (typeof value === "function") {
       result.push({ spec: node.spec, load: value as () => Promise<{ default: RuntimeHandler }> })
-      for (const alias of node.aliases) result.push({ spec: alias.spec, load: value as () => Promise<{ default: RuntimeHandler }> })
+      for (const alias of node.aliases)
+        result.push({ spec: alias.spec, load: value as () => Promise<{ default: RuntimeHandler }> })
       return
     }
     if (value.$) {
       result.push({ spec: node.spec, load: value.$ as () => Promise<{ default: RuntimeHandler }> })
-      for (const alias of node.aliases) result.push({ spec: alias.spec, load: value.$ as () => Promise<{ default: RuntimeHandler }> })
+      for (const alias of node.aliases)
+        result.push({ spec: alias.spec, load: value.$ as () => Promise<{ default: RuntimeHandler }> })
     }
     for (const [name, child] of Object.entries(node.commands)) add(child, value[name] as RuntimeHandlers)
   }
@@ -96,6 +99,7 @@ function provide(node: Spec.Any, handlers: ReadonlyArray<LazyHandler>): Provided
         Command.withHandler((input) =>
           Effect.gen(function* () {
             if (yield* PrintLogs) process.env.OPENCODE_PRINT_LOGS = "1"
+            ensurePluginRuntime()
             const module = yield* Effect.promise(handler.load)
             return yield* module.default(input)
           }),
