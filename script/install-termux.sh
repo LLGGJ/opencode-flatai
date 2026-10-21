@@ -48,7 +48,7 @@ if ! bun --version; then
     echo "O Bun não iniciou dentro do Debian. Se apareceu Bad system call, este Android ainda bloqueia uma chamada de sistema do runtime; envie este erro completo." >&2
     exit 1
 fi
-if bun install --frozen-lockfile; then
+if bun run setup:dev; then
     cd script/local-cli
 else
     status=$?

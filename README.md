@@ -92,7 +92,9 @@ npm install -g github:LLGGJ/opencode-flatai
 ### Gerar uma release
 
 As ferramentas de desenvolvimento ficam em `packages/dev-tools`; o manifesto
-raiz mantém o pacote npm sem dependências de workspaces. Use o build existente:
+raiz mantém o pacote npm sem dependências de workspaces. `package.bun.json`
+guarda o manifesto de desenvolvimento; `bun run setup:dev` o aplica apenas
+durante a instalação e restaura o manifesto npm ao terminar. Use o build existente:
 
 ```bash
 OPENCODE_CHANNEL=flatai OPENCODE_VERSION=2.0.29 bun run packages/cli/script/build.ts --target=opencode-linux-x64-baseline --skip-install --skip-web-ui
