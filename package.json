@@ -164,7 +164,9 @@
     "flatai": "script/npm/flatai.cjs"
   },
   "files": [
-    "script/npm/"
+    "script/npm/flatai.cjs",
+    "script/npm/install.cjs",
+    "script/npm/releases.json"
   ],
   "engines": {
     "node": ">=18"
