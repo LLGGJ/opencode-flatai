@@ -28,10 +28,14 @@ flatai
 
 O npm registra `flatai`. Na primeira execução, o lançador baixa o executável
 compilado da release correspondente e verifica seu SHA-256; as próximas
-execuções reutilizam esse arquivo. A primeira execução precisa acessar GitHub Releases.
+execuções reutilizam esse arquivo no cache do usuário (`$XDG_CACHE_HOME/flatai`
+ou `~/.cache/flatai`), sem precisar escrever na pasta global do npm. A primeira execução precisa acessar GitHub Releases.
 Esta distribuição contém a interface de terminal e o servidor API; não inclui a
 interface web. macOS, Windows, Alpine/musl e Android nativo ainda não têm
 binários nesta distribuição.
+
+Se o npm 12 responder `EALLOWGIT`, habilite a instalação Git com
+`npm config set allow-git all` e repita o comando.
 
 Para atualizar ou remover:
 
@@ -98,7 +102,7 @@ guarda o manifesto de desenvolvimento; `bun run setup:dev` o aplica apenas
 durante a instalação e restaura o manifesto npm ao terminar. Use o build existente:
 
 ```bash
-OPENCODE_CHANNEL=flatai OPENCODE_VERSION=2.0.29 bun run packages/cli/script/build.ts --target=opencode-linux-x64-baseline --skip-install --skip-web-ui
+OPENCODE_CHANNEL=flatai OPENCODE_VERSION=2.0.30 bun run packages/cli/script/build.ts --target=opencode-linux-x64-baseline --skip-install --skip-web-ui
 ```
 
 Compile também `opencode-linux-arm64` com suas dependências nativas disponíveis.

@@ -7,8 +7,6 @@ const { pipeline } = require("node:stream/promises")
 const { Readable } = require("node:stream")
 
 async function install() {
-  // Bun installs the development workspaces; npm installs only the release binary.
-  if (process.env.npm_config_user_agent?.startsWith("bun/")) return
   if (process.platform === "android" || process.env.PREFIX?.includes("com.termux")) {
     throw new Error(
       "Native Termux is unsupported. Install inside Debian (proot-distro login debian), then run npm install -g github:LLGGJ/opencode-flatai there. Android kernel compatibility still depends on the device.",
@@ -21,7 +19,8 @@ async function install() {
   if (process.platform === "linux" && !process.report.getReport().header.glibcVersionRuntime) {
     throw new Error("This release requires glibc Linux (for example Debian or Ubuntu).")
   }
-  const destination = path.join(__dirname, "flatai-bin")
+  const destination = require("./binary.cjs")
+  fs.mkdirSync(path.dirname(destination), { recursive: true })
   const temporary = `${destination}.${process.pid}.tmp`
   try {
     const response = await fetch(
