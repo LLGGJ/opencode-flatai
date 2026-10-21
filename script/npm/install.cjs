@@ -4,7 +4,7 @@ const path = require("node:path")
 const crypto = require("node:crypto")
 const zlib = require("node:zlib")
 const { pipeline } = require("node:stream/promises")
-const { Readable } = require("node:stream")
+const { Readable, Transform } = require("node:stream")
 
 async function install() {
   if (process.platform === "android" || process.env.PREFIX?.includes("com.termux")) {
@@ -28,10 +28,24 @@ async function install() {
       { signal: AbortSignal.timeout(300000) },
     )
     if (!response.ok) throw new Error(`Release download failed: HTTP ${response.status}`)
+    const size = Number(response.headers.get("content-length"))
+    let received = 0
+    let reported = 0
+    const progress = new Transform({
+      transform(chunk, encoding, callback) {
+        received += chunk.length
+        const percent = size > 0 ? Math.min(100, Math.floor((received / size) * 10) * 10) : 0
+        if (percent > reported) {
+          reported = percent
+          process.stderr.write(`FlatAI: ${percent}% (${(received / 1048576).toFixed(1)} MiB)\n`)
+        }
+        callback(null, chunk)
+      },
+    })
     const hash = crypto.createHash("sha256")
     const unzip = zlib.createGunzip()
     unzip.on("data", (chunk) => hash.update(chunk))
-    await pipeline(Readable.fromWeb(response.body), unzip, fs.createWriteStream(temporary, { mode: 0o755 }))
+    await pipeline(Readable.fromWeb(response.body), progress, unzip, fs.createWriteStream(temporary, { mode: 0o755 }))
     if (hash.digest("hex") !== asset.sha256) throw new Error("Release checksum mismatch")
     fs.chmodSync(temporary, 0o755)
     fs.renameSync(temporary, destination)

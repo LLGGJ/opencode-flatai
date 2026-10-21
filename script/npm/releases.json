@@ -1,13 +1,13 @@
 {
-  "version": "2.0.30",
+  "version": "2.1.0",
   "assets": {
     "linux-x64": {
       "file": "flatai-linux-x64.gz",
-      "sha256": "1d740f93f45ce93bf31d5487032736a712a68b499505a7f0e34220fded953903"
+      "sha256": "443f2f62600ff9c6aa8eab7aa71951346dcdc45a364c118fc19dd427d791fc82"
     },
     "linux-arm64": {
       "file": "flatai-linux-arm64.gz",
-      "sha256": "2c6ffb3dcead947b92e10c332c2a6a6300ea250e683d29a23da0a4acdf0432f6"
+      "sha256": "9c2f9b1f6c3ae7440875e3bfe59f4044409aad54b8d2bf860a7b6e72f91359cd"
     }
   }
 }

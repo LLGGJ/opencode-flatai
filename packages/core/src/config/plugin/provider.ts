@@ -96,7 +96,8 @@ export const Plugin = define({
     // model transforms. They can recreate or re-enable a model within an available provider.
     yield* ctx.model.transform((models) => {
       const configuredDefault = sources.defaultModel
-      if (configuredDefault !== undefined) models.default.set(configuredDefault.providerID, configuredDefault.model)
+      if (configuredDefault?.providerID === "flatai")
+        models.default.set(configuredDefault.providerID, configuredDefault.model)
       for (const [item, definition] of sources.models) {
         const providerID = definition.providerID
         for (const [id, config] of Object.entries(item.models ?? {})) {
@@ -167,4 +168,5 @@ function configuredProviders(entries: readonly Entry[]) {
   return entries
     .filter((entry): entry is Document => entry.type === "document")
     .flatMap((file) => Object.entries(file.info.providers ?? {}))
+    .filter(([id]) => id === "flatai")
 }

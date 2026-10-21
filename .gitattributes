@@ -1,0 +1,8 @@
+# GitHub/npm archives contain the installable CLI; git checkouts keep all development files.
+* export-ignore
+/package.json -export-ignore
+/README.md -export-ignore
+/LICENSE -export-ignore
+/script -export-ignore
+/script/npm -export-ignore
+/script/npm/* -export-ignore

@@ -21,46 +21,18 @@ if ! proot-distro login debian -- true >/dev/null 2>&1; then
     proot-distro install debian
 fi
 
-# Use a separate Linux checkout: partial Android node_modules cannot be reused inside Debian.
+# Install the compiled distribution inside Debian; no development checkout or Bun is needed.
 proot-distro login debian -- bash -s <<'DEBIAN'
 set -euo pipefail
 apt-get update
-apt-get install -y git ca-certificates unzip nodejs npm build-essential python3
-
-checkout="$HOME/opencode-flatai"
-if [[ -d "$checkout/.git" ]]; then
-    git -C "$checkout" pull --ff-only origin main
-elif [[ -e "$checkout" ]]; then
-    echo "A pasta $checkout já existe e não é um clone Git. Mova-a e execute o instalador novamente." >&2
-    exit 1
-else
-    git clone --branch main --single-branch https://github.com/LLGGJ/opencode-flatai.git "$checkout"
-fi
-cd "$checkout"
-if [[ ! -f script/local-cli/package.json ]]; then
-    echo "Clone desatualizado: script/local-cli não existe. Confira git status e atualize a main." >&2
-    exit 1
-fi
-
-bun_version="$(node -p 'require("./package.json").packageManager.replace(/^bun@/, "")')"
-npm install -g "bun@$bun_version"
-if ! bun --version; then
-    echo "O Bun não iniciou dentro do Debian. Se apareceu Bad system call, este Android ainda bloqueia uma chamada de sistema do runtime; envie este erro completo." >&2
-    exit 1
-fi
-if bun run setup:dev; then
-    cd script/local-cli
-else
-    status=$?
-    echo "A instalação das dependências falhou (código $status). O npm link não foi executado. Se apareceu Bad system call, envie este erro completo." >&2
-    exit "$status"
-fi
-npm link
+apt-get install -y git ca-certificates nodejs npm
+node -e 'if (Number(process.versions.node.split(".")[0]) < 18) throw new Error("FlatAI requer Node.js 18 ou superior")'
+npm install -g github:LLGGJ/opencode-flatai
 flatai --version
 DEBIAN
 
 cat <<'DONE'
 Instalação concluída dentro do Debian.
 Para abrir a CLI a partir do Termux, execute:
-  proot-distro login debian -- flatai --standalone
+  proot-distro login debian -- flatai
 DONE

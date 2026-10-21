@@ -107,11 +107,8 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
           database: {
             path: databasePath(global.data),
           },
-          models: {
-            url: process.env.OPENCODE_MODELS_URL,
-            file: process.env.OPENCODE_MODELS_PATH,
-            fetch: !truthy(process.env.OPENCODE_DISABLE_MODELS_FETCH),
-          },
+          // FlatAI uses the bundled catalog; stale model caches and external catalogs must not add providers.
+          models: { fetch: false },
           config: {
             directory: process.env.OPENCODE_CONFIG_DIR,
             project: !truthy(

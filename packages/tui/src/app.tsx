@@ -895,7 +895,7 @@ function App() {
         name: "mcp.list",
         title: "MCP servers",
         category: "Agent",
-        slash: { name: "mcps" },
+        slash: { name: "mcp", aliases: ["mcps"] },
         run: () => {
           dialog.replace(() => <DialogMcp />)
         },
