@@ -26,8 +26,9 @@ flatai --help
 flatai
 ```
 
-O npm registra `flatai` e baixa o executável compilado da release correspondente,
-verificando seu SHA-256. A instalação precisa acessar GitHub Releases.
+O npm registra `flatai`. Na primeira execução, o lançador baixa o executável
+compilado da release correspondente e verifica seu SHA-256; as próximas
+execuções reutilizam esse arquivo. A primeira execução precisa acessar GitHub Releases.
 Esta distribuição contém a interface de terminal e o servidor API; não inclui a
 interface web. macOS, Windows, Alpine/musl e Android nativo ainda não têm
 binários nesta distribuição.

@@ -22,7 +22,7 @@ async function install() {
     throw new Error("This release requires glibc Linux (for example Debian or Ubuntu).")
   }
   const destination = path.join(__dirname, "flatai-bin")
-  const temporary = `${destination}.tmp`
+  const temporary = `${destination}.${process.pid}.tmp`
   try {
     const response = await fetch(
       `https://github.com/LLGGJ/opencode-flatai/releases/download/v${manifest.version}/${asset.file}`,
