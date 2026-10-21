@@ -62,6 +62,28 @@ Confirme que `node --version` é 18 ou superior. Para abrir novamente pelo Termu
 proot-distro login debian -- flatai
 ```
 
+### Abrir com `flatai` no Termux normal
+
+Se funciona somente quando o prompt mostra `root@localhost`, você está usando a
+instalação dentro do Debian. Esse usuário root é do ambiente proot; não requer
+root no Android. Para abrir a mesma instalação diretamente no Termux, instale
+um atalho uma vez. Saia do Debian com `exit` e execute no Termux:
+
+```bash
+curl -fL https://raw.githubusercontent.com/LLGGJ/opencode-flatai/main/script/install-termux.sh -o "$TMPDIR/flatai-install.sh"
+bash "$TMPDIR/flatai-install.sh" --launcher-only
+flatai
+```
+
+Esse modo verifica `flatai --version` dentro do Debian e cria o comando no
+`$PREFIX/bin` do Termux, sem reinstalar dependências. O atalho entra no Debian
+automaticamente, reutilizando a chave e as configurações dessa instalação.
+A CLI continua executando dentro do Debian; o atalho não altera seu diretório
+inicial para a pasta atual do Termux.
+
+Para uma instalação completa, execute o mesmo script sem `--launcher-only`.
+O instalador completo também cria esse atalho ao terminar.
+
 **A execução em aparelho Android ainda não foi validada.** Debian via proot
 compartilha o kernel do Android; erros como `Bad system call` podem persistir
 conforme o aparelho. Nesse caso, informe o erro completo e `uname -m`.

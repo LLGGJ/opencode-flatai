@@ -6,6 +6,11 @@ if [[ -z "${TERMUX_VERSION:-}" || "${PREFIX:-}" != */com.termux/* ]]; then
     exit 1
 fi
 
+if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != "--launcher-only" ) ]]; then
+    echo "Uso: bash install-termux.sh [--launcher-only]" >&2
+    exit 1
+fi
+
 case "$(uname -m)" in
     aarch64|x86_64) ;;
     *)
@@ -14,15 +19,19 @@ case "$(uname -m)" in
         ;;
 esac
 
-if ! command -v proot-distro >/dev/null 2>&1; then
-    pkg install -y proot-distro
-fi
-if ! proot-distro login debian -- true >/dev/null 2>&1; then
-    proot-distro install debian
-fi
+if [[ "${1:-}" == "--launcher-only" ]]; then
+    # Validate the existing Debian installation without reinstalling its packages.
+    proot-distro login debian -- flatai --version
+else
+    if ! command -v proot-distro >/dev/null 2>&1; then
+        pkg install -y proot-distro
+    fi
+    if ! proot-distro login debian -- true >/dev/null 2>&1; then
+        proot-distro install debian
+    fi
 
-# Install the compiled distribution inside Debian; no development checkout or Bun is needed.
-proot-distro login debian -- bash -s <<'DEBIAN'
+    # Install the compiled distribution inside Debian; no development checkout or Bun is needed.
+    proot-distro login debian -- bash -s <<'DEBIAN'
 set -euo pipefail
 apt-get update
 apt-get install -y git ca-certificates nodejs npm
@@ -30,9 +39,23 @@ node -e 'if (Number(process.versions.node.split(".")[0]) < 18) throw new Error("
 npm install -g github:LLGGJ/opencode-flatai
 flatai --version
 DEBIAN
+fi
+
+# Replace a previous npm symlink without modifying the package it points to.
+launcher_tmp="$(mktemp "$PREFIX/bin/.flatai.XXXXXX")"
+trap 'rm -f "$launcher_tmp"' EXIT
+{
+    printf '#!%s/bin/sh\n' "$PREFIX"
+    cat <<'LAUNCHER'
+# FlatAI starts inside the existing Debian installation.
+exec proot-distro login debian -- flatai "$@"
+LAUNCHER
+} > "$launcher_tmp"
+chmod 755 "$launcher_tmp"
+mv -f "$launcher_tmp" "$PREFIX/bin/flatai"
 
 cat <<'DONE'
-Instalação concluída dentro do Debian.
-Para abrir a CLI a partir do Termux, execute:
-  proot-distro login debian -- flatai
+Atalho instalado no Termux. Para abrir o chat, execute:
+  flatai
+O atalho inicia a CLI dentro do Debian automaticamente; não requer root no Android.
 DONE
