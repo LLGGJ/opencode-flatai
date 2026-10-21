@@ -93,7 +93,7 @@ guarda o manifesto de desenvolvimento; `bun run setup:dev` o aplica durante a
 instalação e restaura o manifesto npm ao terminar.
 
 ```bash
-OPENCODE_CHANNEL=flatai OPENCODE_VERSION=2.1.0 bun run packages/cli/script/build.ts --target=opencode-linux-x64-baseline --skip-install --skip-web-ui
+OPENCODE_CHANNEL=flatai OPENCODE_VERSION=2.1.1 bun run packages/cli/script/build.ts --target=opencode-linux-x64-baseline --skip-install --skip-web-ui
 ```
 
 Compile também `opencode-linux-arm64` com as dependências nativas disponíveis.

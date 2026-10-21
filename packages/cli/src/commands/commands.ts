@@ -5,7 +5,7 @@ import { Updater } from "../services/updater"
 
 export const PrintLogs = GlobalFlag.Setting("print-logs")({
   flag: Flag.Boolean("print-logs").pipe(
-    Flag.withDescription("Print logs to stderr (server logs require --standalone)"),
+    Flag.withDescription("Print diagnostic logs to stderr"),
     Flag.withDefault(false),
   ),
 })
