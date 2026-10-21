@@ -63,8 +63,7 @@ function previewBuildNumber() {
 const bot = ["actions-user", "opencode", "opencode-agent[bot]"]
 const teamPath = path.resolve(import.meta.dir, "../../../.github/TEAM_MEMBERS")
 const team = [
-  ...(await Bun.file(teamPath)
-    .text()
+  ...(await ((await Bun.file(teamPath).exists()) ? Bun.file(teamPath).text() : Promise.resolve(""))
     .then((x) => x.split(/\r?\n/).map((x) => x.trim()))
     .then((x) => x.filter((x) => x && !x.startsWith("#")))),
   ...bot,

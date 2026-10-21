@@ -133,6 +133,7 @@ const make = Effect.gen(function* () {
   const channel = OPENCODE_CHANNEL.replace(/[^a-zA-Z0-9._-]/g, "-")
   const executable = yield* fs.realPath(process.execPath).pipe(Effect.orElseSucceed(() => process.execPath))
   const installedPackage = yield* Effect.gen(function* () {
+    if (OPENCODE_CHANNEL === "flatai") return "flatai"
     const directory = path.dirname(path.dirname(executable))
     const manifest: { name: string; bin?: Record<string, string> } = yield* fs
       .readFileString(path.join(directory, "package.json"))
@@ -202,7 +203,10 @@ const make = Effect.gen(function* () {
     if (installedFormula) return "brew"
     if (!installedPackage) return
 
-    const parts = executable.toLowerCase().split(path.sep).map((part) => part.replace(/^\./, ""))
+    const parts = executable
+      .toLowerCase()
+      .split(path.sep)
+      .map((part) => part.replace(/^\./, ""))
     const checks: Array<{ method: Method; command: string[] }> = [
       { method: "npm", command: ["npm", "list", "-g", "--depth=0", installedPackage] },
       { method: "pnpm", command: ["pnpm", "list", "-g", "--depth=0", installedPackage] },
@@ -310,10 +314,19 @@ const make = Effect.gen(function* () {
   })
 
   const latest = (selected?: Method) =>
-    (selected ? Effect.succeed(selected) : method()).pipe(
-      Effect.flatMap(release),
-      Effect.map((data) => data.version),
-    )
+    OPENCODE_CHANNEL === "flatai"
+      ? Effect.tryPromise(async () => {
+          const response = await fetch("https://api.github.com/repos/LLGGJ/opencode-flatai/releases/latest")
+          if (!response.ok) throw new Error(`GitHub release lookup failed: ${response.status}`)
+          const data = (await response.json()) as { tag_name: string }
+          const version = data.tag_name.replace(/^v/, "")
+          if (!parseReleaseVersion(version)) throw new Error("Invalid FlatAI release version")
+          return version
+        })
+      : (selected ? Effect.succeed(selected) : method()).pipe(
+          Effect.flatMap(release),
+          Effect.map((data) => data.version),
+        )
 
   const temporaryDirectory = (prefix: string) =>
     Effect.acquireRelease(fs.makeTempDirectory({ directory: global.cache, prefix }), (directory) =>
@@ -368,6 +381,17 @@ const make = Effect.gen(function* () {
   }
 
   const upgrade = Effect.fnUntraced(function* (method: Method, input: string) {
+    if (OPENCODE_CHANNEL === "flatai") {
+      const version = input.replace(/^v/, "")
+      if (!parseReleaseVersion(version)) return yield* Effect.fail(new Error("Invalid FlatAI version"))
+      if (method !== "npm") return yield* Effect.fail(new Error("FlatAI updates require --method npm"))
+      const result = yield* exec(
+        ["npm", "install", "--global", `github:LLGGJ/opencode-flatai#v${version}`],
+        "10 minutes",
+      )
+      if (result.code !== 0) return yield* Effect.fail(new Error(result.stderr || "FlatAI npm update failed"))
+      return
+    }
     if (!parseReleaseVersion(input)) return yield* Effect.fail(new Error(`Invalid version: ${input}`))
     const version = input.trim().replace(/^v/, "")
     const packageName =
@@ -456,7 +480,11 @@ const make = Effect.gen(function* () {
   })
 
   const inspect = Effect.fnUntraced(function* () {
-    if (OPENCODE_LOCAL || ["1", "true"].includes(process.env.OPENCODE_DISABLE_AUTOUPDATE?.toLowerCase() ?? "")) {
+    if (
+      OPENCODE_CHANNEL === "flatai" ||
+      OPENCODE_LOCAL ||
+      ["1", "true"].includes(process.env.OPENCODE_DISABLE_AUTOUPDATE?.toLowerCase() ?? "")
+    ) {
       yield* Effect.logInfo("update check skipped", {
         reason: OPENCODE_LOCAL ? "local-install" : "disabled",
         version: OPENCODE_VERSION,

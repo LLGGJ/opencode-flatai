@@ -14,138 +14,94 @@ CLI de programação com IA para terminal, baseada no OpenCode, com FlatAI e foc
 - **Branch Padrão:** `main`
 - **Visibilidade:** Público
 
-## ⚡ Começando Rápido (Linux/macOS)
+## ⚡ Instalar e iniciar (Linux)
 
-**No Termux, comece pela seção [Android/Termux](#-androidtermux).**
-Ela prepara o Debian e instala o Bun antes das dependências do projeto.
-
-Requisitos: Git, Node.js com npm e **Bun 1.4.2** (versão de `packageManager`).
-O monorepositório usa `catalog:` e `workspace:`, que o npm não resolve neste projeto.
-Use Bun para instalar as dependências; `npm install` e `npm link` na raiz não são suportados.
-Se o Bun ainda não estiver instalado no Linux/macOS, execute `npm install -g bun@1.4.2`
-e confirme a instalação com `bun --version` antes de continuar.
+Requisitos: Linux com glibc (Debian/Ubuntu), x64 ou arm64, Node.js 18+,
+npm e Git. Não é necessário clonar o repositório nem instalar Bun.
 
 ```bash
-git clone https://github.com/LLGGJ/opencode-flatai.git
-cd opencode-flatai
-# Instale as dependências com Bun
-bun install --frozen-lockfile
-
-# Registre o comando flatai com npm link
-cd script/local-cli
-npm link
-cd ../..
-
-# Inicie a CLI
-flatai
-```
-
-### Disponibilizar o comando flatai com npm link
-
-Após instalar as dependências com Bun, execute na raiz do clone:
-
-```bash
-cd script/local-cli
-npm link
-cd ../..
+npm install -g github:LLGGJ/opencode-flatai
 flatai --version
 flatai --help
 flatai
 ```
 
-Essa pasta contém um pacote local sem dependências, para o npm registrar o comando
-sem tentar instalar os workspaces. O comando executa o código deste clone com Bun
-e preserva a pasta de onde você chamou `flatai`. Mantenha o clone no mesmo caminho.
-A versão exibida ao executar pelo código-fonte é `local`.
+O npm registra `flatai` e baixa o executável compilado da release correspondente,
+verificando seu SHA-256. A instalação precisa acessar GitHub Releases.
+Esta distribuição contém a interface de terminal e o servidor API; não inclui a
+interface web. macOS, Windows, Alpine/musl e Android nativo ainda não têm
+binários nesta distribuição.
 
-Se você já havia feito o vínculo com o nome `opencode`, remova-o com
-`npm uninstall -g opencode-flatai-local` e execute `npm link` novamente em
-`script/local-cli` para registrar `flatai`.
+Para atualizar ou remover:
 
-Para remover o vínculo: `npm uninstall -g opencode-flatai-local`.
+```bash
+npm install -g github:LLGGJ/opencode-flatai
+# ou: flatai upgrade
+npm uninstall -g flatai
+```
 
 ## 📱 Android/Termux
 
-O projeto depende de Bun e módulos nativos para Linux. O ambiente Android do Termux
-usa outra biblioteca de sistema (Bionic); os binários Linux não executam diretamente
-nele. O caminho proposto é usar **Debian via proot-distro**, em aparelho com arquitetura
-`aarch64`/`arm64` ou `x86_64`. Este procedimento ainda precisa de validação em um
-aparelho real; a verificação deste repositório foi feita em Linux x64.
-
-### Instalar pelo Termux
-
-Se você já clonou o repositório, **atualize esse clone**. Não repita `git clone`
-na mesma pasta. No Termux, execute:
+O binário depende de glibc e não funciona diretamente no Android/Bionic.
+Instale dentro do Debian via proot, sem clonar o projeto:
 
 ```bash
-cd ~/opencode-flatai &&
-git pull --ff-only origin main &&
-bash script/install-termux.sh
+pkg update
+pkg install proot-distro
+proot-distro install debian
+proot-distro login debian
+apt-get update
+apt-get install -y nodejs npm git ca-certificates
+npm install -g github:LLGGJ/opencode-flatai
+flatai --version
+flatai --standalone
 ```
 
-O instalador prepara o Debian, mantém um clone separado dentro dele, instala o Bun
-na versão do projeto e depois instala as dependências e executa `npm link` em
-`script/local-cli`. Se uma etapa falhar, ele para antes de anunciar sucesso.
-A pasta `node_modules` da instalação interrompida no Android não é reutilizada.
-
-Depois da instalação, abra a CLI **a partir do Termux** com:
+Se o Debian já estiver instalado, use apenas `proot-distro login debian`.
+Confirme `node --version` (18 ou superior). Para abrir novamente pelo Termux:
 
 ```bash
 proot-distro login debian -- flatai --standalone
 ```
 
-O modo `--standalone` mantém o servidor junto da CLI nessa sessão do proot.
-Para usar o comando `flatai` dentro do Debian:
+**A execução em aparelho Android ainda não foi validada.** O Debian compartilha
+o kernel do Android: `Bad system call` pode persistir por incompatibilidade do
+runtime com o aparelho. Envie o erro completo e `uname -m` nesse caso.
+A instalação nativa no Termux falha com uma orientação para usar Debian.
+
+## Desenvolvimento e npm link
+
+Para trabalhar em um checkout existente, use Bun 1.4.2:
 
 ```bash
-proot-distro login debian
+bun run setup:dev
+cd script/local-cli
+npm link
 flatai --standalone
 ```
 
-Clone na pasta pessoal do Debian; o armazenamento compartilhado do Android
-(`/sdcard`) não oferece os links simbólicos e permissões exigidos.
-
-### Atualizar uma instalação existente
-
-Dentro do Debian, entre na pasta do clone e execute:
+`npm link` registra o comando; as dependências de desenvolvimento são instaladas
+por Bun. A versão do lançador de desenvolvimento aparece como `local`.
+Para trocar esse vínculo pela distribuição compilada:
 
 ```bash
-git pull --ff-only origin main &&
-bun install --frozen-lockfile &&
-(cd script/local-cli && npm link) &&
-flatai --standalone
+npm uninstall -g opencode-flatai-local
+npm install -g github:LLGGJ/opencode-flatai
 ```
 
-### Erros comuns
+### Gerar uma release
 
-- **`destination path ... already exists`:** o clone já existe. Entre nele com
-  `cd ~/opencode-flatai` e atualize com `git pull --ff-only origin main`.
-- **`Bad system call (core dumped)`:** o Bun foi encerrado por uma chamada de
-  sistema incompatível ou bloqueada no Android. Execute o instalador acima para
-  tentar a instalação dentro do Debian. O proot usa o mesmo kernel do Android;
-  se o erro persistir dentro dele, ainda há uma incompatibilidade do runtime
-  com o aparelho e precisamos do erro dessa etapa para investigar.
-- **`cd: script/local-cli: No such file or directory`:** seu clone está
-  desatualizado. Atualize a `main` antes de tentar `npm link`.
-- **`husky: not found` durante `npm link`:** o comando foi executado na raiz
-  sem as dependências instaladas. Pare após a primeira falha e use o instalador;
-  `npm link` deve executar somente dentro de `script/local-cli`.
-- **`EUNSUPPORTEDPROTOCOL` / `Unsupported URL Type "catalog:"` ou `"workspace:"`:**
-  instale com `bun install --frozen-lockfile` na raiz e execute `npm link` somente
-  em `script/local-cli`.
-- **`bun: command not found`:** execute o instalador acima; ele instala o Bun
-  dentro do Debian, onde a CLI será executada.
-- **`Exec format error` / binário existe, mas aparece `No such file or directory`:**
-  confira se você está dentro do Debian, e se `uname -m` indica `aarch64` ou `x86_64`.
-- **`Cannot find module 'react/jsx-dev-runtime'` / `Standalone server exited before reporting readiness`:**
-  atualize o clone conforme os comandos acima. O lançador `flatai` prepara o OpenTUI
-  tanto na interface quanto nos processos do servidor.
-- **`flatai: command not found`:** execute `npm link` dentro do Debian e confira
-  se `$(npm prefix -g)/bin` está no `PATH`.
+As ferramentas de desenvolvimento ficam em `packages/dev-tools`; o manifesto
+raiz mantém o pacote npm sem dependências de workspaces. Use o build existente:
 
-Para obter detalhes da inicialização, execute `flatai --print-logs`.
-Se persistir, envie o comando executado, o erro completo e as saídas de
-`uname -m`, `node --version`, `npm --version` e `bun --version`.
+```bash
+OPENCODE_CHANNEL=flatai OPENCODE_VERSION=2.0.29 bun run packages/cli/script/build.ts --target=opencode-linux-x64-baseline --skip-install --skip-web-ui
+```
+
+Compile também `opencode-linux-arm64` com suas dependências nativas disponíveis.
+Comprima os executáveis com gzip, publique-os na release `v<versão>` e atualize
+`script/npm/releases.json` com os nomes e SHA-256 dos executáveis descompactados.
+A versão de `package.json`, do pacote CLI e da release deve coincidir.
 
 ## 🏷️ Lançamentos & Versões
 

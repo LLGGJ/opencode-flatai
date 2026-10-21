@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "opencode",
+  "name": "flatai",
   "description": "AI-powered development tool",
-  "version": "2.0.26",
+  "version": "2.0.29",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.2",
@@ -29,11 +29,11 @@
     "typecheck:profile": "bun script/profile-typecheck.ts",
     "typecheck:profile:packages": "bun script/profile-typecheck-packages.ts",
     "upgrade-opentui": "bun run script/upgrade-opentui.ts",
-    "postinstall": "bun run --cwd packages/core fix-node-pty",
-    "prepare": "husky",
+    "postinstall": "node script/npm/install.cjs",
     "random": "echo 'Random script'",
     "sso": "aws sso login --sso-session=opencode --no-browser",
-    "test": "echo 'do not run tests from root' && exit 1"
+    "test": "echo 'do not run tests from root' && exit 1",
+    "setup:dev": "bun install --frozen-lockfile && bun run --cwd packages/core fix-node-pty && husky"
   },
   "workspaces": {
     "packages": [
@@ -115,35 +115,9 @@
       "@lydell/node-pty": "1.2.0-beta.12"
     }
   },
-  "devDependencies": {
-    "@actions/artifact": "5.0.1",
-    "@ast-grep/cli": "0.44.0",
-    "@opencode/client": "workspace:*",
-    "@oxlint/plugins": "1.60.0",
-    "@tsconfig/bun": "catalog:",
-    "@types/mime-types": "3.0.1",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
-    "@typescript/native-preview": "catalog:",
-    "glob": "13.0.5",
-    "husky": "9.1.7",
-    "oxlint": "1.60.0",
-    "oxlint-tsgolint": "0.21.0",
-    "prettier": "3.6.2",
-    "semver": "^7.6.0",
-    "sst": "catalog:",
-    "turbo": "2.10.2"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "3.933.0",
-    "@opencode/plugin": "workspace:*",
-    "@opencode/script": "workspace:*",
-    "heap-snapshot-toolkit": "1.1.3",
-    "typescript": "catalog:"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/anomalyco/opencode"
+    "url": "git+https://github.com/LLGGJ/opencode-flatai.git"
   },
   "license": "MIT",
   "prettier": {
@@ -157,16 +131,16 @@
     "electron"
   ],
   "overrides": {
-    "@opentui/core": "catalog:",
-    "@opentui/keymap": "catalog:",
-    "@opentui/solid": "catalog:",
-    "@effect/platform-node-shared": "catalog:",
-    "@types/bun": "catalog:",
-    "@types/node": "catalog:",
+    "@opentui/core": "0.5.17",
+    "@opentui/keymap": "0.5.17",
+    "@opentui/solid": "0.5.17",
+    "@effect/platform-node-shared": "4.0.1",
+    "@types/bun": "1.4.0",
+    "@types/node": "24.12.2",
     "bun-types": "1.4.2",
-    "effect": "catalog:",
+    "effect": "4.0.1",
     "open": "11.0.4",
-    "solid-js": "catalog:"
+    "solid-js": "1.9.15"
   },
   "patchedDependencies": {
     "@ai-sdk/openai-compatible@2.0.41": "patches/@ai-sdk%2Fopenai-compatible@2.0.41.patch",
@@ -185,5 +159,14 @@
     "ghostty-web@github:anomalyco/ghostty-web#83c0a07": "patches/ghostty-web@0.3.0.patch",
     "vite@8.2.2": "patches/vite@8.2.2.patch",
     "@modelcontextprotocol/client@2.0.0": "patches/@modelcontextprotocol%2Fclient@2.0.0.patch"
+  },
+  "bin": {
+    "flatai": "script/npm/flatai.cjs"
+  },
+  "files": [
+    "script/npm/"
+  ],
+  "engines": {
+    "node": ">=18"
   }
 }
