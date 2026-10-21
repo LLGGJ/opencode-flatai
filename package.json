@@ -33,7 +33,9 @@
     "random": "echo 'Random script'",
     "sso": "aws sso login --sso-session=opencode --no-browser",
     "test": "echo 'do not run tests from root' && exit 1",
-    "setup:dev": "bun install --frozen-lockfile && bun run --cwd packages/core fix-node-pty && husky"
+    "setup:dev": "bun install --frozen-lockfile && bun run --cwd packages/core fix-node-pty && husky",
+    "prepack": "node script/npm/pack.cjs",
+    "postpack": "node script/npm/pack.cjs"
   },
   "workspaces": {
     "packages": [
